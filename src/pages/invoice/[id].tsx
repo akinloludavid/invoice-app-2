@@ -18,10 +18,11 @@ import { useRouter } from "next/router";
 import { InvoiceType } from "@/utils/types";
 import { baseUrl } from "@/utils/helper";
 import { useCustomToast } from "@/customHooks/notifications";
+import { nanoid } from "nanoid";
 const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
   const router = useRouter();
   const { id = "" } = router.query;
-  const { successAlert, errorAlert } = useCustomToast();
+  const { successAlert } = useCustomToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditInvoice, setShowEditInvoice] = useState(false);
   const { isMobile } = useCustomMediaQuery();
@@ -262,8 +263,8 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 gap="24px"
                 flexDirection={["column"]}
               >
-                {invoice.items.map((item: any, index: number) => (
-                  <Flex key={index} align="center" justify={"space-between"}>
+                {invoice.items.map((item: any) => (
+                  <Flex key={nanoid()} align="center" justify={"space-between"}>
                     <Box>
                       <Text
                         color={boldTextColor}
@@ -295,11 +296,11 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 ))}
               </Flex>
 
-              {invoice.items.map((item: any, idx: number) => (
+              {invoice.items.map((item: any) => (
                 <>
                   {!isMobile && (
                     <Grid
-                      key={idx}
+                      key={nanoid()}
                       mb={["32px"]}
                       templateColumns={["repeat(6,1fr)"]}
                     >
@@ -397,14 +398,13 @@ export async function getStaticPaths() {
   const { data }: { data: InvoiceType[] } = await res.json();
   // Pass data to the page via props
   return {
-    // paths: [{ params: { id: "1" } }, { params: { id: "2" } }],
-    paths: data.map((el) => ({ params: { id: el.id } })),
+    paths: data?.map((el) => ({ params: { id: el.id } })),
 
     fallback: false, // can also be true or 'blocking'
   };
 }
 
-export const getStaticProps = async (context: any) => {
+export async function getStaticProps(context: any) {
   const { id } = context.params;
   const res = await fetch(`${baseUrl}/api/invoice/${id}`);
   const { data: invoiceDetails } = await res.json();
@@ -413,6 +413,6 @@ export const getStaticProps = async (context: any) => {
       invoice: invoiceDetails,
     },
   };
-};
+}
 
 export default InvoiceDetails;
