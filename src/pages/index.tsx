@@ -53,9 +53,10 @@ export default function Home() {
             Invoices
           </Heading>
           <Text color={lightTextColor}>
-            {`${isMobile ? "" : "There are total"} ${
-              invoiceLists?.length
-            } invoices`}
+            {invoiceLists?.length &&
+              `${isMobile ? "" : "There are total"} ${
+                invoiceLists?.length
+              } invoices`}
           </Text>
         </Box>
         <Flex align={["center"]} gap={["24px"]}>
