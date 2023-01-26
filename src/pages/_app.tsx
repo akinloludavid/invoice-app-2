@@ -8,7 +8,16 @@ import "@fontsource/spartan/400.css";
 import "@fontsource/spartan/500.css";
 import "@fontsource/spartan/700.css";
 export default function App({ Component, pageProps }: AppProps) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            refetchOnMount: false,
+          },
+        },
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
