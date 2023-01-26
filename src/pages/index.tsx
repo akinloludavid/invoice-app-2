@@ -11,17 +11,20 @@ import {
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
-import db from "../../data.json";
 import InvoiceListComp from "@/components/InvoiceList";
 import { AnimatedView } from "@/components/AnimatedView";
 import CreateInvoice from "@/components/CreateInvoice";
 import useCustomMediaQuery from "@/customHooks/mediaQuery";
 import { status } from "@/utils/data";
 import { InvoiceType } from "@/utils/types";
-import { baseUrl } from "@/utils/helper";
 import EmptyInvoice from "@/components/EmptyInvoice";
+import { useGetAllInvoices } from "@/api/query";
+import TableLoader from "@/components/PageLoader";
 
-export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
+export default function Home() {
+  const [statusValue, setStatusValue] = useState("");
+  const { data: invoiceLists, isLoading: isInvoicesLoading } =
+    useGetAllInvoices(statusValue);
   const [showCreateInvoice, setShowCreateInvoice] = useState(false);
   const boldTextColor = useColorModeValue("#0C0E16", "#ffffff");
   const lightTextColor = useColorModeValue(
@@ -32,7 +35,6 @@ export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
   const showCreateInvoiceForm = () => {
     setShowCreateInvoice(true);
   };
-  const [statusValue, setStatusValue] = useState("");
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setStatusValue(e.target.value);
   };
@@ -51,7 +53,9 @@ export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
             Invoices
           </Heading>
           <Text color={lightTextColor}>
-            {`${isMobile ? "" : "There are total"} ${db.length} invoices`}
+            {`${isMobile ? "" : "There are total"} ${
+              invoiceLists?.length
+            } invoices`}
           </Text>
         </Box>
         <Flex align={["center"]} gap={["24px"]}>
@@ -95,6 +99,7 @@ export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
         </Flex>
       </Flex>
       <Box>
+        {isInvoicesLoading && <TableLoader />}
         {invoiceLists?.length === 0 && (
           <Flex
             justify={"center"}
@@ -106,7 +111,7 @@ export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
             <EmptyInvoice />
           </Flex>
         )}
-        {invoiceLists?.map((el, idx) => (
+        {invoiceLists?.map((el: InvoiceType, idx: number) => (
           <AnimatedView key={el.id} delay={idx * 0.05}>
             <Box mb="16px">
               <InvoiceListComp {...el} />
@@ -119,12 +124,4 @@ export default function Home({ data: invoiceLists }: { data: InvoiceType[] }) {
       )}
     </Box>
   );
-}
-
-export async function getServerSideProps() {
-  // Fetch data from external API
-  const res = await fetch(`${baseUrl}/api/invoices`);
-  const { data } = await res.json();
-  // Pass data to the page via props
-  return { props: { data } || null };
 }

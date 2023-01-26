@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Modal,
   ModalOverlay,
@@ -11,30 +11,29 @@ import {
   useColorModeValue,
   Button,
 } from "@chakra-ui/react";
-import { baseUrl } from "@/utils/helper";
 import { useRouter } from "next/router";
 import { useCustomToast } from "@/customHooks/notifications";
+import { useDeleteInvoice } from "@/api/query";
 const DeleteModal = ({ isOpen, onClose, id }: any) => {
   const router = useRouter();
+  const { mutate: mutateDeleteInvoice, isLoading: isDeleting } =
+    useDeleteInvoice();
   const { successAlert, errorAlert } = useCustomToast();
   const boldTextColor = useColorModeValue("#0C0E16", "#ffffff");
   const draftColor = useColorModeValue("#888EB0", "#DFE3FA");
-  const [isDeleting, setIsDeleting] = useState(false);
   const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      await fetch(`${baseUrl}/api/invoice/${id}`, {
-        method: "DELETE",
-      });
-      successAlert("Invoice deleted successfully");
-      setTimeout(() => {
-        router.push("/");
-      }, 1500);
-    } catch (error) {
-      errorAlert("Deletion failed, try again");
-      console.log(error);
-    }
-    setIsDeleting(false);
+    mutateDeleteInvoice(id, {
+      onSuccess: () => {
+        successAlert("Invoice deleted successfully");
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
+      },
+      onError: (error: any) => {
+        errorAlert("Deletion failed, try again");
+        console.log(error);
+      },
+    });
   };
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

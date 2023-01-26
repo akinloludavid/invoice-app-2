@@ -11,21 +11,34 @@ export default async function handleInvoice(
   await connectDB();
   if (req.method === "GET") {
     try {
-      const allInvoices = await InvoiceModel.find({}).sort({ createdAt: -1 });
-      res.status(200).json({
-        data: allInvoices,
-      });
+      const { status } = req.query;
+      if (status) {
+        const allInvoices = await InvoiceModel.find({})
+          .sort({ createdAt: -1 })
+          .where({
+            status,
+          });
+        return res.status(200).json({
+          data: allInvoices,
+        });
+      } else {
+        const allInvoices = await InvoiceModel.find({}).sort({ createdAt: -1 });
+        return res.status(200).json({
+          data: allInvoices,
+        });
+      }
     } catch (error: any) {
-      res.status(500).json({
+      return res.status(500).json({
         status: "error",
         message: error.message,
       });
     }
   } else if (req.method === "POST") {
     try {
-      const body = JSON.parse(req.body);
+      const body = req.body;
       const uniqueId = getRandomId();
       const newBody = { ...body, id: uniqueId };
+
       const newInvoice = await InvoiceModel.create(newBody);
       res.status(201).json({
         data: newInvoice,

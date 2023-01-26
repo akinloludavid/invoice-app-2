@@ -22,8 +22,8 @@ export interface IFormList {
 }
 
 export interface InvoiceType {
-  id: string;
-  createdAt: string;
+  id?: string;
+  createdAt?: string;
   paymentDue: string;
   description: string;
   paymentTerms: 1;
@@ -43,6 +43,6 @@ export interface InvoiceType {
     country: string;
   };
   items: IFormList[];
-  total: string | number;
+  total?: string | number;
   _id?: string;
 }

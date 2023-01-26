@@ -11,7 +11,7 @@ const PageLayout = ({ children }: IChildren) => {
   return (
     <Box
       bgColor={mainBgColor}
-      px={["24px", "48px", "48px", "120px", "355px"]}
+      px={["24px", "24px", "48px", "120px", "355px"]}
       minH="100vh"
       minW="100vw"
     >

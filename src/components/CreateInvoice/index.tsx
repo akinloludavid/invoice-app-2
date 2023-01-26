@@ -28,12 +28,17 @@ import * as Yup from "yup";
 import { ICreateInvoice, IFormList, InvoiceType } from "@/utils/types";
 import { MdChevronLeft } from "react-icons/md";
 import { paymentTerms } from "@/utils/data";
-import { baseUrl } from "@/utils/helper";
 import { useCustomToast } from "@/customHooks/notifications";
 import { useRouter } from "next/router";
+import { useCreateInvoice } from "@/api/query";
 
 const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
   const router = useRouter();
+  const { mutate: mutateCreateInvoice, isLoading: isCreateInvoiceLoading } =
+    useCreateInvoice();
+  const { mutate: mutateSaveInvoiceAsDraft, isLoading: isDraftInvoiceLoading } =
+    useCreateInvoice();
+
   const btnBgColor = useColorModeValue("#F9FAFE", "#252945");
   const btnColor = useColorModeValue("#7E88C3", "#DFE3FA");
   const boldTextColor = useColorModeValue("#0C0E16", "#ffffff");
@@ -45,9 +50,7 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
     "1px solid #DFE3FA",
     "1px solid #252945"
   );
-  const [loadingStates, setLoadingStates] = useState({
-    isCreateInvoiceLoading: false,
-  });
+
   const errorBorder = "1px solid #EC5757";
   const { errorAlert, successAlert } = useCustomToast();
   const [formArray, setFormArray] = useState<IFormList[]>([]);
@@ -113,22 +116,19 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
       total: formArray.reduce((acc, curr) => acc + Number(curr.total), 0),
       status: "pending",
     };
-    setLoadingStates({ ...loadingStates, isCreateInvoiceLoading: true });
-    try {
-      await fetch(`${baseUrl}/api/invoices`, {
-        method: "POST",
-        body: JSON.stringify(formValues),
-      });
-      successAlert("Invoice created successfully");
-      setTimeout(() => {
-        setShowCreateInvoice(false);
-        router.reload();
-      }, 2000);
-    } catch (error: any) {
-      errorAlert("Sorry error occurred");
-      console.log(error.message);
-    }
-    setLoadingStates({ ...loadingStates, isCreateInvoiceLoading: false });
+    mutateCreateInvoice(formValues, {
+      onSuccess: () => {
+        successAlert("Invoice created successfully");
+        setTimeout(() => {
+          setShowCreateInvoice(false);
+          router.reload();
+        }, 2000);
+      },
+      onError: (error: any) => {
+        errorAlert("Sorry error occurred");
+        console.log(error.message);
+      },
+    });
   };
   const addToFormList = () => {
     setFormArray((prev) => [
@@ -161,7 +161,7 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
     setFormArray(newFormArray);
   };
   const handleSaveAsDraft = async (values: any) => {
-    const formValues = {
+    const formValues: InvoiceType = {
       senderAddress: {
         street: values.billFromStreetAddress,
         city: values.billFromCity,
@@ -183,22 +183,19 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
       total: formArray.reduce((acc, curr) => acc + Number(curr.total), 0),
       status: "draft",
     };
-    setLoadingStates({ ...loadingStates, isCreateInvoiceLoading: true });
-    try {
-      await fetch(`${baseUrl}/api/invoices`, {
-        method: "POST",
-        body: JSON.stringify(formValues),
-      });
-      successAlert("Invoice created successfully");
-      setTimeout(() => {
-        setShowCreateInvoice(false);
-        router.reload();
-      }, 2000);
-    } catch (error: any) {
-      errorAlert("Sorry error occurred");
-      console.log(error.message);
-    }
-    setLoadingStates({ ...loadingStates, isCreateInvoiceLoading: false });
+    mutateSaveInvoiceAsDraft(formValues, {
+      onSuccess: () => {
+        successAlert("Invoice created successfully");
+        setTimeout(() => {
+          setShowCreateInvoice(false);
+          router.reload();
+        }, 2000);
+      },
+      onError: (error: any) => {
+        errorAlert("Sorry error occurred");
+        console.log(error.message);
+      },
+    });
   };
   useEffect(() => {
     boxRef.current?.focus();
@@ -924,10 +921,8 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
                     _hover={{}}
                     color={draftColor}
                     onClick={() => handleSaveAsDraft(values)}
-                    isDisabled={
-                      !isValid || loadingStates.isCreateInvoiceLoading
-                    }
-                    isLoading={loadingStates.isCreateInvoiceLoading}
+                    isDisabled={!isValid || isDraftInvoiceLoading}
+                    isLoading={isDraftInvoiceLoading}
                     _disabled={{
                       bgColor: "gray",
                       cursor: "not-allowed",
@@ -937,8 +932,8 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
                   </Button>
                   <Button
                     type="submit"
-                    isDisabled={loadingStates.isCreateInvoiceLoading}
-                    isLoading={loadingStates.isCreateInvoiceLoading}
+                    isDisabled={isCreateInvoiceLoading}
+                    isLoading={isCreateInvoiceLoading}
                     _disabled={{
                       bgColor: "gray",
                       cursor: "not-allowed",

@@ -27,9 +27,9 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import { IFormList, InvoiceType } from "@/utils/types";
 import { paymentTerms } from "@/utils/data";
-import { baseUrl } from "@/utils/helper";
 import { useCustomToast } from "@/customHooks/notifications";
 import { useRouter } from "next/router";
+import { useUpdateInvoice } from "@/api/query";
 interface IEditInvoice {
   id: string | any;
   invoice: InvoiceType;
@@ -37,6 +37,8 @@ interface IEditInvoice {
 }
 const EditInvoice = ({ setShowCreateInvoice, id, invoice }: IEditInvoice) => {
   const router = useRouter();
+  const { mutate: mutateEditInvoice, isLoading: isEditing } =
+    useUpdateInvoice();
   const btnBgColor = useColorModeValue("#F9FAFE", "#252945");
   const btnColor = useColorModeValue("#7E88C3", "#DFE3FA");
   const boldTextColor = useColorModeValue("#0C0E16", "#ffffff");
@@ -49,9 +51,7 @@ const EditInvoice = ({ setShowCreateInvoice, id, invoice }: IEditInvoice) => {
     "1px solid #252945"
   );
   const errorBorder = "1px solid #EC5757";
-  const [loadingStates, setLoadingStates] = useState({
-    isEditLoading: false,
-  });
+
   const { errorAlert, successAlert } = useCustomToast();
   const [formArray, setFormArray] = useState<IFormList[]>(invoice.items);
   const boxRef: any = useRef(null);
@@ -117,20 +117,17 @@ const EditInvoice = ({ setShowCreateInvoice, id, invoice }: IEditInvoice) => {
       items: formArray,
       total: formArray.reduce((acc, curr) => acc + Number(curr.total), 0),
     };
-    setLoadingStates({ ...loadingStates, isEditLoading: true });
-    try {
-      await fetch(`${baseUrl}/api/invoice/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(formValues),
-      });
-      successAlert("Invoice updated successfully");
-      setShowCreateInvoice(false);
-      router.reload();
-    } catch (error: any) {
-      errorAlert("Sorry error occurred");
-      console.log(error.message);
-    }
-    setLoadingStates({ ...loadingStates, isEditLoading: false });
+    mutateEditInvoice(formValues, {
+      onSuccess: () => {
+        successAlert("Invoice updated successfully");
+        setShowCreateInvoice(false);
+        router.reload();
+      },
+      onError: (error: any) => {
+        errorAlert("Sorry error occurred");
+        console.log(error.message);
+      },
+    });
   };
   const addToFormList = () => {
     setFormArray((prev) => [
@@ -877,8 +874,8 @@ const EditInvoice = ({ setShowCreateInvoice, id, invoice }: IEditInvoice) => {
                   </Button>
                   <Button
                     type="submit"
-                    isDisabled={loadingStates.isEditLoading}
-                    isLoading={loadingStates.isEditLoading}
+                    isDisabled={isEditing}
+                    isLoading={isEditing}
                     _disabled={{
                       bgColor: "gray",
                       cursor: "not-allowed",

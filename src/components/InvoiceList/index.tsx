@@ -33,7 +33,7 @@ const InvoiceListComp = (props: any) => {
           borderRadius={"8px"}
           h={["134px", "72px"]}
           py={["16px"]}
-          px={["24px", "32px"]}
+          px={["24px"]}
           alignItems="center"
           bgColor={listBgColor}
           cursor="pointer"
@@ -61,7 +61,7 @@ const InvoiceListComp = (props: any) => {
             mb="-36px"
           >
             <Text variant={"body1"} color={dateTextColor}>
-              {new Date(date).toDateString()}
+              {new Date(date).toDateString().substring(4)}
             </Text>
           </GridItem>
           <GridItem colSpan={2} colStart={[3, 0]} rowStart={[1, 0]}>
@@ -105,7 +105,7 @@ const InvoiceListComp = (props: any) => {
           borderRadius={"8px"}
           h={["134px", "72px"]}
           py={["16px"]}
-          px={["24px", "32px"]}
+          px={["24px", "24px", "32px"]}
           alignItems="center"
           bgColor={listBgColor}
           cursor="pointer"
@@ -128,7 +128,7 @@ const InvoiceListComp = (props: any) => {
           </GridItem>
           <GridItem colSpan={2}>
             <Text variant={"body1"} color={dateTextColor}>
-              Due {new Date(date).toDateString()}
+              Due {new Date(date).toDateString().substring(4)}
             </Text>
           </GridItem>
           <GridItem colSpan={2}>

@@ -1,5 +1,5 @@
 "use client";
-import React, { Context, useState } from "react";
+import React, { useState } from "react";
 import EditInvoice from "@/components/EditInvoice";
 import GoBack from "@/components/GoBack";
 import DeleteModal from "@/components/Modals/DeleteModal";
@@ -11,24 +11,28 @@ import {
   Flex,
   Grid,
   GridItem,
+  Spinner,
   Text,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { useRouter } from "next/router";
 import { InvoiceType } from "@/utils/types";
-import { baseUrl } from "@/utils/helper";
 import { useCustomToast } from "@/customHooks/notifications";
 import { nanoid } from "nanoid";
-const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
+import { useGetInvoiceById, useUpdateInvoice } from "@/api/query";
+const InvoiceDetails = () => {
   const router = useRouter();
-  const { id = "" } = router.query;
-  const { successAlert } = useCustomToast();
+  const { id } = router.query;
+  const { data: invoice, isLoading: isInvoiceLoading } = useGetInvoiceById(
+    id as string
+  );
+  const { mutate: mutateMarkAsPaid, isLoading: isPaidLoading } =
+    useUpdateInvoice();
+  const { successAlert, errorAlert } = useCustomToast();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditInvoice, setShowEditInvoice] = useState(false);
   const { isMobile } = useCustomMediaQuery();
-  const [loadingStates, setLoadingStates] = useState({
-    isPaidLoading: false,
-  });
+
   const cardBgColor = useColorModeValue("#ffffff", "#1E2139");
   const boldTextColor = useColorModeValue("#0C0E16", "#ffffff");
   const handleDeleteModal = () => {
@@ -46,31 +50,26 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
   const tableBgColor = useColorModeValue("#F9FAFE", "#252945");
   const amountBgColor = useColorModeValue("#373B53", "#0C0E16");
   const handleMarkAsPaid = async (invoice: InvoiceType) => {
-    try {
-      setLoadingStates({
-        ...loadingStates,
-        isPaidLoading: true,
-      });
-      const newInvoice = { ...invoice, status: "paid" };
-      await fetch(`${baseUrl}/api/invoice/${invoice.id}`, {
-        method: "PUT",
-        body: JSON.stringify(newInvoice),
-      });
-
-      successAlert("Invoice updated successfully");
-      setTimeout(() => {
-        router.reload();
-      }, 1500);
-    } catch (error) {
-      console.log(error);
-    }
-    setLoadingStates({
-      ...loadingStates,
-      isPaidLoading: false,
-    });
+    mutateMarkAsPaid(
+      { ...invoice, status: "paid" },
+      {
+        onSuccess: () => {
+          successAlert("Invoice updated successfully");
+          setTimeout(() => {
+            router.reload();
+          }, 1500);
+        },
+        onError: (error: any) => {
+          console.log(error);
+          errorAlert("Error occured");
+        },
+      }
+    );
   };
-  if (router.isFallback) {
-    <h1>Data is loading</h1>;
+  if (isInvoiceLoading) {
+    <Flex justify={"center"} align="center">
+      <Spinner color="pryColor" thickness="4px" size="lg" />
+    </Flex>;
   }
   return (
     <>
@@ -111,8 +110,8 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
               </Button>
               <Button
                 onClick={() => handleMarkAsPaid(invoice)}
-                isLoading={loadingStates.isPaidLoading}
-                isDisabled={loadingStates.isPaidLoading}
+                isLoading={isPaidLoading}
+                isDisabled={isPaidLoading}
                 _hover={{}}
                 _disabled={{
                   bgColor: "gray",
@@ -153,7 +152,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                   </Text>
                   {id}
                 </Text>
-                <Text color={statusColor}>{invoice.description}</Text>
+                <Text color={statusColor}>{invoice?.description}</Text>
               </Box>
               <Box
                 h={["75px"]}
@@ -162,16 +161,16 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 gap="5px"
               >
                 <Text color={statusColor} textAlign={["left", "right"]}>
-                  {invoice.senderAddress.street}
+                  {invoice?.senderAddress?.street}
                 </Text>
                 <Text color={statusColor} textAlign={["left", "right"]}>
-                  {invoice.senderAddress.city}
+                  {invoice?.senderAddress?.city}
                 </Text>
                 <Text color={statusColor} textAlign={["left", "right"]}>
-                  {invoice.senderAddress.postCode}
+                  {invoice?.senderAddress?.postCode}
                 </Text>
                 <Text color={statusColor} textAlign={["left", "right"]}>
-                  {invoice.senderAddress.country}
+                  {invoice?.senderAddress?.country}
                 </Text>
               </Box>
             </Flex>
@@ -181,13 +180,13 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                   Invoice Date
                 </Text>
                 <Text color={boldTextColor} variant="bold">
-                  {new Date(invoice.createdAt).toDateString()}
+                  {new Date(invoice?.createdAt).toDateString()}
                 </Text>
                 <Text color={statusColor} mt={["32px"]} mb={["12px"]}>
                   Payment Due
                 </Text>
                 <Text color={boldTextColor} variant="bold">
-                  {invoice.paymentDue}
+                  {invoice?.paymentDue}
                 </Text>
               </Box>
               <Box>
@@ -195,7 +194,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                   Bill To
                 </Text>
                 <Text color={boldTextColor} variant="bold" mb={["8px"]}>
-                  {invoice.clientName}
+                  {invoice?.clientName}
                 </Text>
                 <Box
                   h={["75px"]}
@@ -204,16 +203,16 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                   gap="5px"
                 >
                   <Text color={statusColor} textAlign={"left"}>
-                    {invoice.clientAddress.street}
+                    {invoice?.clientAddress?.street}
                   </Text>
                   <Text color={statusColor} textAlign={"left"}>
-                    {invoice.clientAddress.city}
+                    {invoice?.clientAddress?.city}
                   </Text>
                   <Text color={statusColor} textAlign={"left"}>
-                    {invoice.clientAddress.postCode}
+                    {invoice?.clientAddress?.postCode}
                   </Text>
                   <Text color={statusColor} textAlign={"left"}>
-                    {invoice.clientAddress.country}
+                    {invoice?.clientAddress?.country}
                   </Text>
                 </Box>
               </Box>
@@ -222,7 +221,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                   Sent To
                 </Text>
                 <Text color={boldTextColor} variant={"bold"}>
-                  {invoice.clientEmail || "N/A"}
+                  {invoice?.clientEmail || "N/A"}
                 </Text>
               </Box>
             </Flex>
@@ -263,7 +262,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 gap="24px"
                 flexDirection={["column"]}
               >
-                {invoice.items.map((item: any) => (
+                {invoice?.items?.map((item: any) => (
                   <Flex key={nanoid()} align="center" justify={"space-between"}>
                     <Box>
                       <Text
@@ -296,7 +295,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 ))}
               </Flex>
 
-              {invoice.items.map((item: any) => (
+              {invoice?.items?.map((item: any) => (
                 <>
                   {!isMobile && (
                     <Grid
@@ -365,7 +364,7 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
                 lineHeight={"32px"}
                 color="#fff"
               >
-                £{invoice.total}
+                £{invoice?.total}
               </Text>
             </Flex>
           </Flex>
@@ -387,32 +386,21 @@ const InvoiceDetails = ({ invoice }: { invoice: InvoiceType }) => {
         <Button variant="delete" onClick={() => setIsOpen(true)}>
           Delete
         </Button>
-        <Button>Mark as Paid</Button>
+        <Button
+          _hover={{}}
+          _disabled={{
+            bgColor: "gray",
+            cursor: "not-allowed",
+          }}
+          isDisabled={isPaidLoading}
+          isLoading={isPaidLoading}
+          onClick={() => handleMarkAsPaid(invoice)}
+        >
+          Mark as Paid
+        </Button>
       </Flex>
     </>
   );
 };
-
-export async function getStaticPaths() {
-  const res = await fetch(`${baseUrl}/api/invoices`);
-  const { data }: { data: InvoiceType[] } = await res.json();
-  // Pass data to the page via props
-  return {
-    paths: data?.map((el) => ({ params: { id: el.id } })),
-
-    fallback: false, // can also be true or 'blocking'
-  };
-}
-
-export async function getStaticProps(context: any) {
-  const { id } = context.params;
-  const res = await fetch(`${baseUrl}/api/invoice/${id}`);
-  const { data: invoiceDetails } = await res.json();
-  return {
-    props: {
-      invoice: invoiceDetails,
-    },
-  };
-}
 
 export default InvoiceDetails;

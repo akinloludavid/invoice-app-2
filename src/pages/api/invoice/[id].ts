@@ -36,7 +36,7 @@ export default async function handleInvoice(
           data: null,
         });
       }
-      const body = JSON.parse(req.body);
+      const body = req.body;
       const newInvoice = await InvoiceModel.findOneAndUpdate(
         { id: paramId },
         { ...body },
