@@ -17,7 +17,13 @@ const EmptyInvoice = () => {
       </Heading>
       <Text color={"#888EB0"} variant="body1">
         Create an invoice by clicking the{" "}
-        <Text fontWeight={["700"]}>New Invoice</Text> button and get started
+        <Text
+          fontWeight={["700"]}
+          color={useColorModeValue("#888EB0", "#DFE3FA")}
+        >
+          New Invoice
+        </Text>{" "}
+        button and get started
       </Text>
     </Box>
   );

@@ -2,6 +2,7 @@
 import { connectDB } from "@/api/middleware/mongodb";
 import InvoiceModel from "@/api/models/invoice";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { checkIsCensored } from "../utils/helpers";
 
 export default async function handleInvoice(
   req: NextApiRequest,
@@ -42,10 +43,18 @@ export default async function handleInvoice(
         { ...body },
         { new: true }
       );
-      res.status(201).json({
-        data: newInvoice,
-        status: "success",
-      });
+      const isCensored = await checkIsCensored(newInvoice);
+      if (isCensored["is-bad"]) {
+        return res.status(400).json({
+          message: "Inappropriate Content",
+          status: "error",
+        });
+      } else {
+        res.status(201).json({
+          data: newInvoice,
+          status: "success",
+        });
+      }
     } catch (error: any) {
       console.log("error");
       res.status(500).json({

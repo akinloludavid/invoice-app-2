@@ -53,7 +53,7 @@ export default function Home() {
             Invoices
           </Heading>
           <Text color={lightTextColor}>
-            {invoiceLists?.length &&
+            {invoiceLists?.length > 0 &&
               `${isMobile ? "" : "There are total"} ${
                 invoiceLists?.length
               } invoices`}

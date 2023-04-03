@@ -25,13 +25,13 @@ const DeleteModal = ({ isOpen, onClose, id }: any) => {
     mutateDeleteInvoice(id, {
       onSuccess: () => {
         successAlert("Invoice deleted successfully");
+
         setTimeout(() => {
-          router.push("/");
+          window.location.href = "/";
         }, 1500);
       },
       onError: (error: any) => {
         errorAlert("Deletion failed, try again");
-        console.log(error);
       },
     });
   };
