@@ -125,8 +125,7 @@ const CreateInvoice = ({ setShowCreateInvoice }: ICreateInvoice) => {
         }, 2000);
       },
       onError: (error: any) => {
-        errorAlert("Sorry error occurred");
-        console.log(error.message);
+        errorAlert(error?.response?.data?.message || "Sorry error occurred");
       },
     });
   };

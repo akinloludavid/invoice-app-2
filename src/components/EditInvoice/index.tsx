@@ -124,8 +124,7 @@ const EditInvoice = ({ setShowCreateInvoice, id, invoice }: IEditInvoice) => {
         router.reload();
       },
       onError: (error: any) => {
-        errorAlert("Sorry error occurred");
-        console.log(error.message);
+        errorAlert(error?.response?.data?.message || "Sorry error occurred");
       },
     });
   };
